@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Money Trees 1</string>
+    <string name="edit_profile">EDIT PROFILE</string>
+    <string name="save_changes">SAVE CHANGES</string>
+    <string name="profile_updated">Profile updated successfully</string>
+    <string name="fill_all_fields">Please fill all required fields</string>
+</resources>
