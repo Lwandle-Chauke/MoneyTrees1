@@ -1,5 +1,6 @@
 package com.example.moneytrees1.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moneytrees1.data.User
@@ -12,6 +13,11 @@ import kotlinx.coroutines.launch
  * ViewModel for managing user data operations in a lifecycle-conscious way.
  */
 class UserViewModel(private val repository: UserRepository) : ViewModel() {
+
+    // Add this companion object for logging
+    private companion object {
+        const val TAG = "UserViewModel"
+    }
 
     /**
      * Attempts to log in a user with the given credentials.
@@ -48,13 +54,16 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
             try {
                 val existingUser = repository.getUserByUsername(user.username)
                 if (existingUser != null) {
+                    Log.e(TAG, "Username ${user.username} already exists")
                     onFailure("Username already exists")
                 } else {
                     repository.insertUser(user)
+                    Log.i(TAG, "User ${user.username} registered successfully")
                     onSuccess()
                 }
             } catch (e: Exception) {
-                onFailure("Registration error: ${e.message}")
+                Log.e(TAG, "Registration error for ${user.username}", e)
+                onFailure("Registration error: ${e.message ?: "Unknown error"}")
             }
         }
     }

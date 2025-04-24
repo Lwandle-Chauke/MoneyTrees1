@@ -3,6 +3,7 @@ package com.example.moneytrees1.ui
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.moneytrees1.MyApplication
@@ -27,7 +28,7 @@ class RegisterActivity : AppCompatActivity() {
         setContentView(binding.root)
         Log.d(TAG, "Activity created")
 
-        // Initialize ViewModel
+        // Initialize ViewModel  <-- RIGHT HERE
         val app = application as MyApplication
         userViewModel = ViewModelProvider(
             this,
@@ -112,13 +113,15 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun registerUser(user: User) {
-        binding.btnRegister.isEnabled = false // Disable button during registration
+        binding.btnRegister.isEnabled = false // Disable button
+        binding.progressBar.visibility = View.VISIBLE // Show progress
 
         userViewModel.registerUser(
             user = user,
             onSuccess = {
                 Log.i(TAG, "Registration successful for ${user.username}")
                 if (!isFinishing && !isDestroyed) {
+                    binding.progressBar.visibility = View.GONE // Hide progress
                     showToast("Registration successful!")
                     navigateToLogin()
                 }
@@ -126,7 +129,8 @@ class RegisterActivity : AppCompatActivity() {
             onFailure = { error ->
                 Log.e(TAG, "Registration failed: $error")
                 if (!isFinishing && !isDestroyed) {
-                    binding.btnRegister.isEnabled = true
+                    binding.progressBar.visibility = View.GONE // Hide progress
+                    binding.btnRegister.isEnabled = true // Re-enable button
                     showError(error)
                 }
             }

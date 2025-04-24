@@ -69,7 +69,7 @@ android {
 }
 
 dependencies {
-    // Core Android
+    // Core Android (keep your existing ones)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -77,30 +77,36 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.timber)
 
-    // Room Database
+    // Room Database (you already have these)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     kapt(libs.androidx.room.compiler)
 
-    // Lifecycle
+    // Lifecycle (update these)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.livedata)
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:${libs.versions.lifecycle.get()}")
-    implementation("androidx.lifecycle:lifecycle-common-java8:${libs.versions.lifecycle.get()}")
+    implementation(libs.androidx.lifecycle.runtime)
+    implementation(libs.androidx.lifecycle.common)  // lifecycle-common-java8
 
-    // Coroutines
+    // Coroutines (keep your existing)
     implementation(libs.kotlinx.coroutines)
 
-    // Security
+    // Security (keep your existing and add crypto)
     implementation(libs.bcrypt)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
-    // Testing
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    // ===== TESTING =====
+    // Unit tests
+    testImplementation(libs.junit)  // You already have this
+    testImplementation("org.mockito:mockito-core:5.3.1")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${libs.versions.coroutines.get()}")
-    androidTestImplementation("androidx.room:room-testing:${libs.versions.room.get()}")
+
+    // Android Instrumented Tests
+    androidTestImplementation(libs.androidx.junit)  // You have this
+    androidTestImplementation(libs.androidx.espresso.core)  // You have this
+    androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
+    androidTestImplementation("androidx.test:runner:1.5.2")
 }
 
 kapt {

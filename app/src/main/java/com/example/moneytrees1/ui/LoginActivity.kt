@@ -26,7 +26,7 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
         Log.d(TAG, "Activity created")
 
-        // Initialize ViewModel with factory
+        // Initialize ViewModel with factory  <-- RIGHT HERE
         val app = application as MyApplication
         userViewModel = ViewModelProvider(
             this,
