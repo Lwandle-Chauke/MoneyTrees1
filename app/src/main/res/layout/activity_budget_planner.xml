@@ -77,32 +77,36 @@
             android:textStyle="bold" />
 
         <!-- Monthly/Weekly Buttons -->
-        <LinearLayout
+        <RadioGroup
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:gravity="center"
             android:orientation="horizontal">
 
-            <Button
+            <RadioButton
                 android:id="@+id/btnMonthly"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:backgroundTint="#FF80AB"
+                android:buttonTint="#FFFFFF"
                 android:padding="12dp"
                 android:text="Monthly"
-                android:textColor="#FFFFFF" />
+                android:textColor="#000000"
+                android:textSize="18sp" />
 
-            <Button
+            <RadioButton
                 android:id="@+id/btnWeekly"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#FF80AB"
+                android:buttonTint="#FFFFFF"
                 android:padding="12dp"
                 android:text="Weekly"
-                android:textColor="#FFFFFF" />
-        </LinearLayout>
+                android:textColor="#000000"
+                android:textSize="18sp" />
+        </RadioGroup>
 
         <!-- Budget Amount Input -->
         <EditText
@@ -304,7 +308,7 @@
                 android:id="@+id/totalBudgetAmount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="R 5800.00"
+                android:text="R 0.00"
                 android:textColor="#000000"
                 android:textSize="20sp" />
         </LinearLayout>
