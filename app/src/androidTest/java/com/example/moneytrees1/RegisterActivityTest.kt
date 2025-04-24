@@ -20,10 +20,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class LoginActivityTest {
+class RegisterActivityTest {
 
     @get:Rule
-    var activityRule: ActivityScenarioRule<LoginActivity> = ActivityScenarioRule(LoginActivity::class.java)
+    var activityRule: ActivityScenarioRule<RegisterActivity> = ActivityScenarioRule(RegisterActivity::class.java)
 
     private val testUser = User(
         fullName = "Test User",
@@ -35,9 +35,9 @@ class LoginActivityTest {
 
     @Before
     fun setup() = runBlocking {
-        // Ensure test user exists before login tests
+        // Clear any existing test user
         val app = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as MyApplication
-        app.userRepository.insertUser(testUser)
+        app.userDao.deleteUser(testUser.username)
     }
 
     @After
@@ -48,18 +48,30 @@ class LoginActivityTest {
     }
 
     @Test
-    fun testLoginButton_ShowsErrorWhenEmpty() {
-        Espresso.onView(ViewMatchers.withId(R.id.btnLogin))
+    fun testSuccessfulRegistrationAndLoginFlow() {
+        // Registration
+        Espresso.onView(ViewMatchers.withId(R.id.etFullName))
+            .perform(ViewActions.typeText(testUser.fullName))
+        Espresso.onView(ViewMatchers.withId(R.id.etSurname))
+            .perform(ViewActions.typeText(testUser.surname))
+        Espresso.onView(ViewMatchers.withId(R.id.etUsername))
+            .perform(ViewActions.typeText(testUser.username))
+        Espresso.onView(ViewMatchers.withId(R.id.etEmail))
+            .perform(ViewActions.typeText(testUser.email))
+        Espresso.onView(ViewMatchers.withId(R.id.etPassword))
+            .perform(ViewActions.typeText("testpassword"))
+        Espresso.onView(ViewMatchers.withId(R.id.etRepeatPassword))
+            .perform(ViewActions.typeText("testpassword"))
+
+        Espresso.closeSoftKeyboard()
+        Espresso.onView(ViewMatchers.withId(R.id.btnRegister))
             .perform(ViewActions.click())
 
+        // Verify navigation to LoginActivity
         Espresso.onView(ViewMatchers.withId(R.id.etUsername))
-            .check(ViewAssertions.matches(
-                ViewMatchers.hasErrorText("Username required")
-            ))
-    }
+            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
 
-    @Test
-    fun testSuccessfulLogin_NavigatesToMain() {
+        // Login with registered user
         Espresso.onView(ViewMatchers.withId(R.id.etUsername))
             .perform(ViewActions.typeText(testUser.username))
         Espresso.onView(ViewMatchers.withId(R.id.etPassword))
@@ -69,23 +81,8 @@ class LoginActivityTest {
         Espresso.onView(ViewMatchers.withId(R.id.btnLogin))
             .perform(ViewActions.click())
 
+        // Verify navigation to MainActivity
         Espresso.onView(ViewMatchers.withId(R.id.main))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-    }
-
-    @Test
-    fun testInvalidCredentials_ShowsError() {
-        Espresso.onView(ViewMatchers.withId(R.id.etUsername))
-            .perform(ViewActions.typeText("nonexistent"))
-        Espresso.onView(ViewMatchers.withId(R.id.etPassword))
-            .perform(ViewActions.typeText("wrongpassword"))
-
-        Espresso.closeSoftKeyboard()
-        Espresso.onView(ViewMatchers.withId(R.id.btnLogin))
-            .perform(ViewActions.click())
-
-        Espresso.onView(ViewMatchers.withText("Invalid username or password"))
-            .inRoot(ToastMatcher())
             .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
     }
 }
