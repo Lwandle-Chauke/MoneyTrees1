@@ -6,19 +6,20 @@ import com.example.moneytrees1.data.BudgetRepository
 import com.example.moneytrees1.data.UserRepository
 import com.example.moneytrees1.viewmodels.BudgetViewModelFactory
 import com.example.moneytrees1.viewmodels.UserViewModelFactory
+import timber.log.Timber
 
 /**
- * Custom Application class that provides application-wide dependencies.
- * Initializes Room database, repositories, and ViewModel factories using lazy initialization.
+ * Custom Application class that initializes global dependencies like Room database,
+ * repositories, and ViewModel factories. Also sets up Timber for logging in debug builds.
  */
 class MyApplication : Application() {
 
-    // Database instance (lazy initialized)
+    // Lazy initialization of Room database
     val database by lazy {
         AppDatabase.getDatabase(this)
     }
 
-    // Repositories (lazy initialized)
+    // Lazy initialization of repositories
     val userRepository by lazy {
         UserRepository(database.userDao())
     }
@@ -27,7 +28,7 @@ class MyApplication : Application() {
         BudgetRepository(database.budgetDao())
     }
 
-    // ViewModel Factories (lazy initialized)
+    // Lazy initialization of ViewModel factories
     val userViewModelFactory by lazy {
         UserViewModelFactory(userRepository)
     }
@@ -37,22 +38,28 @@ class MyApplication : Application() {
     }
 
     companion object {
+        private var instance: MyApplication? = null
+
         /**
-         * Get the application instance in a safe way.
-         * @throws IllegalStateException if called before application is created
+         * Provides a singleton instance of the application.
+         * Throws IllegalStateException if accessed before `onCreate()`.
          */
         fun getInstance(): MyApplication {
             return instance ?: throw IllegalStateException("Application not created yet!")
         }
-
-        private var instance: MyApplication? = null
     }
 
     override fun onCreate() {
         super.onCreate()
+
+        // Set the static instance for global access
         instance = this
 
-        // You can add any application-wide initialization here
-        // For example: Crash reporting, Analytics, etc.
+        // Initialize Timber logging only in debug builds
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
+
+        Timber.d("Application created")
     }
 }

@@ -1,7 +1,6 @@
 package com.example.moneytrees1.viewmodels
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.moneytrees1.data.User
 import com.example.moneytrees1.data.UserRepository
@@ -9,7 +8,14 @@ import com.example.moneytrees1.utils.PasswordUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * ViewModel for managing user data operations in a lifecycle-conscious way.
+ */
 class UserViewModel(private val repository: UserRepository) : ViewModel() {
+
+    /**
+     * Attempts to log in a user with the given credentials.
+     */
     fun loginUser(
         username: String,
         password: String,
@@ -18,18 +24,21 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val user = repository.getUserByEmail(username)
+                val user = repository.getUserByUsername(username)
                 if (user != null && PasswordUtils.verifyPassword(password, user.password)) {
                     onSuccess(user)
                 } else {
                     onFailure("Invalid username or password")
                 }
             } catch (e: Exception) {
-                onFailure(e.message ?: "An error occurred")
+                onFailure("Login error: ${e.message}")
             }
         }
     }
 
+    /**
+     * Registers a new user after checking username availability.
+     */
     fun registerUser(
         user: User,
         onSuccess: () -> Unit,
@@ -37,19 +46,22 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val existingUser = repository.getUserByEmail(user.email)
-                if (existingUser == null) {
+                val existingUser = repository.getUserByUsername(user.username)
+                if (existingUser != null) {
+                    onFailure("Username already exists")
+                } else {
                     repository.insertUser(user)
                     onSuccess()
-                } else {
-                    onFailure("User already exists")
                 }
             } catch (e: Exception) {
-                onFailure(e.message ?: "Registration failed")
+                onFailure("Registration error: ${e.message}")
             }
         }
     }
 
+    /**
+     * Gets the current user by username and returns it via callback.
+     */
     fun getCurrentUser(
         username: String,
         onSuccess: (User) -> Unit,
@@ -57,46 +69,48 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val user = repository.getUserByEmail(username)
+                val user = repository.getUserByUsername(username)
                 if (user != null) {
                     onSuccess(user)
                 } else {
                     onFailure("User not found")
                 }
             } catch (e: Exception) {
-                onFailure(e.message ?: "An error occurred")
+                onFailure("Error fetching user: ${e.message}")
             }
         }
     }
 
+    /**
+     * Updates the user profile with new values.
+     */
     fun updateProfile(
         currentUsername: String,
-        fullName: String,
-        surname: String,
-        email: String,
+        newName: String,
+        newSurname: String,
+        newEmail: String,
         newPassword: String,
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val user = repository.getUserByEmail(currentUsername)
-                if (user != null) {
-                    val updatedUser = user.copy(
-                        fullName = fullName,
-                        surname = surname,
-                        email = email,
-                        password = if (newPassword.isNotEmpty()) PasswordUtils.hashPassword(newPassword) else user.password
+                val existingUser = repository.getUserByUsername(currentUsername)
+                if (existingUser != null) {
+                    val updatedUser = existingUser.copy(
+                        fullName = newName,
+                        surname = newSurname,
+                        email = newEmail,
+                        password = newPassword // ✅ NOTE: Should be hashed before calling this
                     )
                     repository.updateUser(updatedUser)
                     onSuccess()
                 } else {
-                    onFailure("User not found")
+                    onFailure("User not found for update.")
                 }
             } catch (e: Exception) {
-                onFailure(e.message ?: "An error occurred")
+                onFailure("Failed to update profile: ${e.message}")
             }
         }
     }
 }
-

@@ -2,6 +2,7 @@
 # Android Gradle Plugin and Kotlin versions must be compatible
 agp = "8.8.0"               # Android Gradle Plugin version
 kotlin = "1.9.24"           # Kotlin version (must match AGP compatibility)
+timber = "5.0.1"
 
 # AndroidX Core versions
 coreKtx = "1.13.1"          # Core KT extensions
@@ -24,6 +25,7 @@ junitVersion = "1.2.0"      # Android JUnit runner
 espressoCore = "3.6.0"      # Espresso UI testing
 
 [libraries]
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 # Android Core Libraries
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }

@@ -56,17 +56,47 @@ class RegisterActivity : AppCompatActivity() {
         val password = binding.etPassword.text.toString()
         val repeatPassword = binding.etRepeatPassword.text.toString()
 
-        Log.d(TAG, "Attempting registration for $username")
+        // Reset error states
+        binding.etFullName.error = null
+        binding.etSurname.error = null
+        binding.etUsername.error = null
+        binding.etEmail.error = null
+        binding.etPassword.error = null
+        binding.etRepeatPassword.error = null
 
         when {
-            fullName.isEmpty() -> showError("Full name is required")
-            surname.isEmpty() -> showError("Surname is required")
-            username.isEmpty() -> showError("Username is required")
-            email.isEmpty() -> showError("Email is required")
-            password.isEmpty() -> showError("Password is required")
-            password != repeatPassword -> showError("Passwords don't match")
-            password.length < 6 -> showError("Password must be at least 6 characters")
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> showError("Invalid email format")
+            fullName.isEmpty() -> {
+                binding.etFullName.error = "Full name is required"
+                binding.etFullName.requestFocus()
+            }
+            surname.isEmpty() -> {
+                binding.etSurname.error = "Surname is required"
+                binding.etSurname.requestFocus()
+            }
+            username.isEmpty() -> {
+                binding.etUsername.error = "Username is required"
+                binding.etUsername.requestFocus()
+            }
+            email.isEmpty() -> {
+                binding.etEmail.error = "Email is required"
+                binding.etEmail.requestFocus()
+            }
+            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                binding.etEmail.error = "Invalid email format"
+                binding.etEmail.requestFocus()
+            }
+            password.isEmpty() -> {
+                binding.etPassword.error = "Password is required"
+                binding.etPassword.requestFocus()
+            }
+            password.length < 6 -> {
+                binding.etPassword.error = "Password must be at least 6 characters"
+                binding.etPassword.requestFocus()
+            }
+            password != repeatPassword -> {
+                binding.etRepeatPassword.error = "Passwords don't match"
+                binding.etRepeatPassword.requestFocus()
+            }
             else -> {
                 val hashedPassword = PasswordUtils.hashPassword(password)
                 val user = User(
