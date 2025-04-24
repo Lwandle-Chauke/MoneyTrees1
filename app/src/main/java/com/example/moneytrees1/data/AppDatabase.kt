@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.moneytrees1.data.Budget
+import com.example.moneytrees1.data.User
 
 /**
  * The Room database for this app that contains the User and Budget tables.
@@ -14,9 +16,10 @@ import androidx.room.RoomDatabase
 @Database(
     entities = [User::class, Budget::class], // Include all your entities here
     version = 1,
-    exportSchema = false // Set to true if you want to keep schema version history
+    exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
+
     /**
      * Provides access to the User Data Access Object (DAO)
      * @return UserDao instance
@@ -30,25 +33,24 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun budgetDao(): BudgetDao
 
     companion object {
-        // Singleton prevents multiple instances of database opening at the same time
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
         /**
-         * Gets the singleton instance of the database.
+         * Returns the singleton instance of the database.
+         * Creates the database if it doesn't already exist.
          *
-         * @param context The application context
-         * @return The database instance
+         * @param context The context to use for creating the database
+         * @return The AppDatabase instance
          */
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                // Create database instance
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "money_trees_db" // Database name
+                    "moneytrees_database" // You can also keep "money_trees_db" if preferred
                 )
-                    .fallbackToDestructiveMigration() // Wipes and rebuilds instead of migrating if no Migration object
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance
