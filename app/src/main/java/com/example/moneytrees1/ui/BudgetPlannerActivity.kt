@@ -3,23 +3,31 @@ package com.example.moneytrees1.ui
 import android.animation.ObjectAnimator
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.*
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.room.Room
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModelProvider
+import com.example.moneytrees1.MyApplication
 import com.example.moneytrees1.R
-import com.example.moneytrees1.data.AppDatabase
 import com.example.moneytrees1.data.Budget
-import com.example.moneytrees1.data.BudgetDao
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import com.example.moneytrees1.viewmodels.BudgetViewModel
+import com.example.moneytrees1.viewmodels.BudgetViewModelFactory
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class BudgetPlannerActivity : AppCompatActivity() {
 
-    private lateinit var budgetDao: BudgetDao
     private lateinit var progressBar: ProgressBar
     private lateinit var progressText: TextView
+    private lateinit var totalBudgetText: TextView
+
+    private val viewModel: BudgetViewModel by lazy {
+        ViewModelProvider(this, BudgetViewModelFactory((application as MyApplication).budgetRepository))
+            .get(BudgetViewModel::class.java)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,15 +35,108 @@ class BudgetPlannerActivity : AppCompatActivity() {
 
         progressBar = findViewById(R.id.budgetProgressBar)
         progressText = findViewById(R.id.progressPercentageText)
+        totalBudgetText = findViewById(R.id.totalBudgetAmount)
 
-        val db = Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java, "moneytree-db"
-        ).build()
-        budgetDao = db.budgetDao()
+        setupTextWatchers()
+        setupObservers()
+        setupNavigation()
 
-        loadLatestBudget() // Load progress when screen opens
+        findViewById<Button>(R.id.btnSaveBudget).setOnClickListener {
+            saveBudget()
+        }
+    }
 
+    private fun setupObservers() {
+        lifecycleScope.launch {
+            viewModel.currentBudget.collect { budget ->
+                budget?.let { updateUI(it) }
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.totalSpent.collect { total ->
+                totalBudgetText.text = "R ${"%.2f".format(total)}"
+            }
+        }
+
+        lifecycleScope.launch {
+            viewModel.progressPercentage.collect { percentage ->
+                progressBar.progress = percentage
+                progressText.text = "$percentage% spent"
+            }
+        }
+    }
+
+    private fun updateUI(budget: Budget) {
+        findViewById<EditText>(R.id.budgetAmount).setText(budget.budgetAmount.toString())
+        findViewById<EditText>(R.id.groceriesBudget).setText(budget.groceriesAmount.toString())
+        findViewById<EditText>(R.id.transportBudget).setText(budget.transportAmount.toString())
+        findViewById<EditText>(R.id.entertainmentBudget).setText(budget.entertainmentAmount.toString())
+        findViewById<EditText>(R.id.minimumGoal).setText(budget.minimumGoal.toString())
+        findViewById<EditText>(R.id.maximumGoal).setText(budget.maximumGoal.toString())
+
+        if (budget.budgetType == "Monthly") {
+            findViewById<RadioButton>(R.id.btnMonthly).isChecked = true
+        } else {
+            findViewById<RadioButton>(R.id.btnWeekly).isChecked = true
+        }
+    }
+
+    private fun setupTextWatchers() {
+        val textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                calculateAndUpdate()
+            }
+        }
+
+        findViewById<EditText>(R.id.groceriesBudget).addTextChangedListener(textWatcher)
+        findViewById<EditText>(R.id.transportBudget).addTextChangedListener(textWatcher)
+        findViewById<EditText>(R.id.entertainmentBudget).addTextChangedListener(textWatcher)
+        findViewById<EditText>(R.id.budgetAmount).addTextChangedListener(textWatcher)
+    }
+
+    private fun calculateAndUpdate() {
+        val groceries = findViewById<EditText>(R.id.groceriesBudget).text.toString().toDoubleOrNull() ?: 0.0
+        val transport = findViewById<EditText>(R.id.transportBudget).text.toString().toDoubleOrNull() ?: 0.0
+        val entertainment = findViewById<EditText>(R.id.entertainmentBudget).text.toString().toDoubleOrNull() ?: 0.0
+        val budgetAmount = findViewById<EditText>(R.id.budgetAmount).text.toString().toDoubleOrNull() ?: 0.0
+
+        val totalSpent = groceries + transport + entertainment
+        totalBudgetText.text = "R ${"%.2f".format(totalSpent)}"
+
+        if (budgetAmount > 0) {
+            val percentage = ((totalSpent / budgetAmount) * 100).coerceAtMost(100.0).toInt()
+            progressBar.progress = percentage
+            progressText.text = "$percentage% spent"
+        }
+    }
+
+    private fun saveBudget() {
+        val budgetType = if (findViewById<RadioButton>(R.id.btnMonthly).isChecked) "Monthly" else "Weekly"
+        val budgetAmount = findViewById<EditText>(R.id.budgetAmount).text.toString().toDoubleOrNull() ?: 0.0
+        val groceriesAmount = findViewById<EditText>(R.id.groceriesBudget).text.toString().toDoubleOrNull() ?: 0.0
+        val transportAmount = findViewById<EditText>(R.id.transportBudget).text.toString().toDoubleOrNull() ?: 0.0
+        val entertainmentAmount = findViewById<EditText>(R.id.entertainmentBudget).text.toString().toDoubleOrNull() ?: 0.0
+        val minGoal = findViewById<EditText>(R.id.minimumGoal).text.toString().toDoubleOrNull() ?: 0.0
+        val maxGoal = findViewById<EditText>(R.id.maximumGoal).text.toString().toDoubleOrNull() ?: 0.0
+
+        val budget = Budget(
+            budgetType = budgetType,
+            budgetAmount = budgetAmount,
+            groceriesAmount = groceriesAmount,
+            transportAmount = transportAmount,
+            entertainmentAmount = entertainmentAmount,
+            minimumGoal = minGoal,
+            maximumGoal = maxGoal
+        )
+
+        viewModel.saveBudget(budget)
+        Toast.makeText(this, "Budget saved!", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun setupNavigation() {
         findViewById<ImageView>(R.id.nav_notifications).setOnClickListener {
             startActivity(Intent(this, NotificationActivity::class.java))
         }
@@ -54,57 +155,6 @@ class BudgetPlannerActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnAddCategory).setOnClickListener {
             startActivity(Intent(this, CategoryActivity::class.java))
-        }
-
-        findViewById<Button>(R.id.btnSaveBudget).setOnClickListener {
-            saveBudget()
-        }
-    }
-
-    private fun saveBudget() {
-        val budgetType = if (findViewById<Button>(R.id.btnMonthly).isPressed) "Monthly" else "Weekly"
-
-        val budgetAmount = findViewById<EditText>(R.id.budgetAmount).text.toString().toDoubleOrNull() ?: 0.0
-        val groceriesAmount = findViewById<EditText>(R.id.groceriesBudget).text.toString().toDoubleOrNull() ?: 0.0
-        val transportAmount = findViewById<EditText>(R.id.transportBudget).text.toString().toDoubleOrNull() ?: 0.0
-        val entertainmentAmount = findViewById<EditText>(R.id.entertainmentBudget).text.toString().toDoubleOrNull() ?: 0.0
-        val minGoal = findViewById<EditText>(R.id.minimumGoal).text.toString().toDoubleOrNull() ?: 0.0
-        val maxGoal = findViewById<EditText>(R.id.maximumGoal).text.toString().toDoubleOrNull() ?: 0.0
-
-        val budget = Budget(
-            budgetType = budgetType,
-            budgetAmount = budgetAmount,
-            groceriesAmount = groceriesAmount,
-            transportAmount = transportAmount,
-            entertainmentAmount = entertainmentAmount,
-            minimumGoal = minGoal,
-            maximumGoal = maxGoal
-        )
-
-        CoroutineScope(Dispatchers.IO).launch {
-            budgetDao.insertBudget(budget)
-            withContext(Dispatchers.Main) {
-                loadLatestBudget() // Reload progress bar after saving
-                Toast.makeText(this@BudgetPlannerActivity, "Budget saved!", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun loadLatestBudget() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val latest = budgetDao.getLastBudget()
-            latest?.let { budget ->
-                val totalSpent = budget.groceriesAmount + budget.transportAmount + budget.entertainmentAmount
-                val percentage = if (budget.budgetAmount > 0) {
-                    ((totalSpent / budget.budgetAmount) * 100).coerceAtMost(100.0).toInt()
-                } else 0
-
-                withContext(Dispatchers.Main) {
-                    progressBar.max = 100
-                    ObjectAnimator.ofInt(progressBar, "progress", percentage).setDuration(800).start()
-                    progressText.text = "$percentage% spent"
-                }
-            }
         }
     }
 }
