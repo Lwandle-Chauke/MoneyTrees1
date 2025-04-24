@@ -8,6 +8,7 @@ import com.example.moneytrees1.data.UserRepository
 import com.example.moneytrees1.utils.PasswordUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext  // Add this import
 
 /**
  * ViewModel for managing user data operations in a lifecycle-conscious way.
@@ -32,12 +33,18 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
             try {
                 val user = repository.getUserByUsername(username)
                 if (user != null && PasswordUtils.verifyPassword(password, user.password)) {
-                    onSuccess(user)
+                    withContext(Dispatchers.Main) {  // Switch to main thread
+                        onSuccess(user)
+                    }
                 } else {
-                    onFailure("Invalid username or password")
+                    withContext(Dispatchers.Main) {  // Switch to main thread
+                        onFailure("Invalid username or password")
+                    }
                 }
             } catch (e: Exception) {
-                onFailure("Login error: ${e.message}")
+                withContext(Dispatchers.Main) {  // Switch to main thread
+                    onFailure("Login error: ${e.message}")
+                }
             }
         }
     }

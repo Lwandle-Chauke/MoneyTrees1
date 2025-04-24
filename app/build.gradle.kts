@@ -96,17 +96,29 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     // ===== TESTING =====
-    // Unit tests
-    testImplementation(libs.junit)  // You already have this
+    // Testing
+    testImplementation(libs.junit)
     testImplementation("org.mockito:mockito-core:5.3.1")
     testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${libs.versions.coroutines.get()}")
 
-    // Android Instrumented Tests
-    androidTestImplementation(libs.androidx.junit)  // You have this
-    androidTestImplementation(libs.androidx.espresso.core)  // You have this
-    androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
+    // AndroidX Test - Core
+    androidTestImplementation("androidx.test:core:1.5.0")
     androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test:rules:1.5.0")
+
+    // Espresso
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
+
+    // AndroidX JUnit
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+
+    // Fragment testing
+    debugImplementation("androidx.fragment:fragment-testing:1.6.2")
+
+    // Architecture components testing
+    androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
 }
 
 kapt {

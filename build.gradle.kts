@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.kotlin.kapt) apply false
 }
 
+
 // Optional: You can add common buildscript configurations here
 buildscript {
     // If you need to add any repositories or dependencies for plugins
@@ -30,3 +31,4 @@ buildscript {
 tasks.register("clean", Delete::class) {
     delete(rootProject.buildDir)
 }
+

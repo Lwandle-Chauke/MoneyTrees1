@@ -84,15 +84,19 @@ class LoginActivity : AppCompatActivity() {
             onSuccess = { user ->
                 Log.i(TAG, "Login successful for user: ${user.username}")
                 if (!isFinishing && !isDestroyed) {
-                    showToast("Welcome ${user.fullName}!")
-                    navigateToMain()
+                    runOnUiThread {
+                        showToast("Welcome ${user.fullName}!")
+                        navigateToMain()
+                    }
                 }
             },
             onFailure = { error ->
                 Log.e(TAG, "Login failed: $error")
                 if (!isFinishing && !isDestroyed) {
-                    binding.btnLogin.isEnabled = true
-                    showToast(error)
+                    runOnUiThread {
+                        binding.btnLogin.isEnabled = true
+                        showToast(error)
+                    }
                 }
             }
         )
@@ -117,6 +121,8 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun showToast(message: String) {
-        android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
+        runOnUiThread {
+            android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 }
